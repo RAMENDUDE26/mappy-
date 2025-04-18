@@ -1,14 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Mappy (NES) Emulator</title>
+  <meta charset="UTF-8">
+  <title>Mappy NES Emulator</title>
   <style>
-    body { font-family: sans-serif; text-align: center; background: #f0f0f0; }
-    canvas { border: 3px solid #000; background: #000; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      overflow: hidden;
+      height: 100%;
+      width: 100%;
+    }
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      image-rendering: pixelated;
+    }
   </style>
 </head>
 <body>
-  <h1>Mappy (NES) Emulator</h1>
   <canvas id="nes-canvas" width="256" height="240"></canvas>
   <script src="https://unpkg.com/jsnes/dist/jsnes.min.js"></script>
   <script>
@@ -26,12 +38,17 @@
 
     const canvas = document.getElementById('nes-canvas');
     const context = canvas.getContext('2d');
-    const imageData = context.getImageData(0, 0, 256, 240);
+    const framebuffer = new Uint32Array(256 * 240);
+    const imageData = context.createImageData(256, 240);
 
     const nes = new jsnes.NES({
-      onFrame(framebuffer_24) {
-        for (let i = 0; i < framebuffer_24.length; i++) {
-          imageData.data[i] = framebuffer_24[i];
+      onFrame: function(buffer) {
+        for (let i = 0; i < buffer.length; i++) {
+          const color = buffer[i];
+          imageData.data[i * 4 + 0] = (color >> 16) & 0xFF; // R
+          imageData.data[i * 4 + 1] = (color >> 8) & 0xFF;  // G
+          imageData.data[i * 4 + 2] = color & 0xFF;         // B
+          imageData.data[i * 4 + 3] = 0xFF;                 // A
         }
         context.putImageData(imageData, 0, 0);
       },
@@ -42,13 +59,12 @@
     const romData = base64ToArrayBuffer(base64ROM);
     nes.loadROM(romData);
 
-    // Start game loop
-    function onAnimationFrame() {
-      nes.frame(); // run one emulation frame
-      requestAnimationFrame(onAnimationFrame);
+    function animate() {
+      nes.frame();
+      requestAnimationFrame(animate);
     }
 
-    requestAnimationFrame(onAnimationFrame); // kick off the loop
+    requestAnimationFrame(animate);
   </script>
 </body>
 </html>
