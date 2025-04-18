@@ -2,11 +2,10 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Mappy NES Emulator</title>
+  <title>Mappy Emulator</title>
   <style>
     html, body {
       margin: 0;
-      padding: 0;
       background: black;
       overflow: hidden;
       height: 100%;
@@ -38,17 +37,17 @@
 
     const canvas = document.getElementById('nes-canvas');
     const context = canvas.getContext('2d');
-    const framebuffer = new Uint32Array(256 * 240);
-    const imageData = context.createImageData(256, 240);
+    const imageData = context.getImageData(0, 0, 256, 240);
 
     const nes = new jsnes.NES({
-      onFrame: function(buffer) {
-        for (let i = 0; i < buffer.length; i++) {
-          const color = buffer[i];
-          imageData.data[i * 4 + 0] = (color >> 16) & 0xFF; // R
-          imageData.data[i * 4 + 1] = (color >> 8) & 0xFF;  // G
-          imageData.data[i * 4 + 2] = color & 0xFF;         // B
-          imageData.data[i * 4 + 3] = 0xFF;                 // A
+      onFrame: function(framebuffer_24) {
+        for (let i = 0; i < framebuffer_24.length; i++) {
+          const offset = i * 4;
+          const color = framebuffer_24[i];
+          imageData.data[offset]     = (color >> 16) & 0xFF; // R
+          imageData.data[offset + 1] = (color >> 8)  & 0xFF; // G
+          imageData.data[offset + 2] = color & 0xFF;          // B
+          imageData.data[offset + 3] = 0xFF;                 // A
         }
         context.putImageData(imageData, 0, 0);
       },
@@ -60,11 +59,11 @@
     nes.loadROM(romData);
 
     function animate() {
-      nes.frame();
+      nes.frame(); // this is essential for the game to advance
       requestAnimationFrame(animate);
     }
 
-    requestAnimationFrame(animate);
+    animate(); // start the loop
   </script>
 </body>
 </html>
