@@ -3,11 +3,12 @@
 <head>
   <title>Mappy (NES) Emulator</title>
   <style>
-    canvas { border: 2px solid #000; }
+    body { font-family: sans-serif; text-align: center; background: #f0f0f0; }
+    canvas { border: 3px solid #000; background: #000; }
   </style>
 </head>
 <body>
-  <h1>Play Mappy (NES)</h1>
+  <h1>Mappy (NES) Emulator</h1>
   <canvas id="nes-canvas" width="256" height="240"></canvas>
   <script src="https://unpkg.com/jsnes/dist/jsnes.min.js"></script>
   <script>
@@ -35,11 +36,19 @@
         context.putImageData(imageData, 0, 0);
       },
       onStatusUpdate: console.log,
-      onAudioSample: function() {} // Audio skipped
+      onAudioSample: () => {}
     });
 
     const romData = base64ToArrayBuffer(base64ROM);
     nes.loadROM(romData);
+
+    // Start game loop
+    function onAnimationFrame() {
+      nes.frame(); // run one emulation frame
+      requestAnimationFrame(onAnimationFrame);
+    }
+
+    requestAnimationFrame(onAnimationFrame); // kick off the loop
   </script>
 </body>
 </html>
